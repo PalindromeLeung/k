@@ -4,6 +4,8 @@ module KOOL-UNTYPED-SYNTAX
 
   syntax Stmt ::= "var" Exps ";"
                 | "method" Id "(" Ids ")" Block  // called "function" in SIMPLE
+                | "private" "var" Exps ";"          // new private vars 
+                | "private" "method" Id "(" Ids ")" Block       // new private method
                 | "class" Id Block               // KOOL
                 | "class" Id "extends" Id Block  // KOOL
 
@@ -72,6 +74,10 @@ module KOOL-UNTYPED-SYNTAX
   rule for(Start Cond; Step) {S} => {Start while (Cond) {S Step;}}
   rule var E1::Exp, E2::Exp, Es::Exps; => var E1; var E2, Es;       [anywhere]
   rule var X::Id = E; => var X; X = E;                              [anywhere]
+
+  rule private var E1::Exp, E2::Exp, Es::Exps; => private var E1; private var E2, Es;   // private var desugaring 
+  rule private var X::Id = E; => private var X; X = E;                                  // private var desugaring 
+
   rule class C:Id S => class C extends Object S                     // KOOL
 
 endmodule
@@ -141,6 +147,10 @@ module KOOL-UNTYPED
        <store>... .Map => L |-> undefined ...</store>
        <nextLoc> L:Int => L +Int 1 </nextLoc>
 
+  rule <k> private var X:Id; => . ...</k>
+       <env> Env => Env[X <- L] </env>
+       <store>... .Map => L |-> undefined ...</store>
+       <nextLoc> L:Int => L +Int 1 </nextLoc>
 
   context var _:Id[HOLE];
 
