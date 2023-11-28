@@ -381,6 +381,13 @@ module KOOL-UNTYPED
        <store>... .Map => L |-> methodClosure(Class,OL,Xs,S) ...</store>
        <nextLoc> L => L +Int 1 </nextLoc>
 
+  rule <k>private method F:Id(Xs:Ids) S => . ...</k>
+       <crntClass> Class:Id </crntClass>
+       <location> OL:Int </location>
+       <env> Env => Env[F <- L] </env>
+       <store>... .Map => L |-> methodClosure(Class,OL,Xs,S) ...</store>
+       <nextLoc> L => L +Int 1 </nextLoc>
+
   syntax KItem ::= "envStackFrame" "(" Id "," Map ")"
 
   rule <k> new Class:Id(Vs:Vals) ~> K
