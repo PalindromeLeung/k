@@ -1,7 +1,7 @@
 module KOOL-UNTYPED-SYNTAX
   imports DOMAINS-SYNTAX
   syntax Id ::= "Object" [token] | "Main" [token]
-
+  syntax Viz ::= "Pub" [token] | "Private" [token]
   syntax Stmt ::= "var" Exps ";"
                 | "method" Id "(" Ids ")" Block  // called "function" in SIMPLE
                 | "private" "var" Exps ";"          // new private vars 
@@ -106,6 +106,7 @@ module KOOL-UNTYPED
                       //<br/> // TODO(KORE): support latex annotations #1799
                         <crntObj color="Fuchsia">  // KOOL
                            <crntClass> Object </crntClass>
+                           <visibility>.Map </visibility>
                            <envStack> .List </envStack>
                            <location multiplicity="?"> .K </location>
                         </crntObj>
@@ -145,10 +146,12 @@ module KOOL-UNTYPED
   rule <k> var X:Id; => . ...</k>
        <env> Env => Env[X <- L] </env>
        <store>... .Map => L |-> undefined ...</store>
+       <visibility> ... .Map => X |-> Pub ...</visibility>
        <nextLoc> L:Int => L +Int 1 </nextLoc>
 
   rule <k> private var X:Id; => . ...</k>
        <env> Env => Env[X <- L] </env>
+       <visibility> ... .Map => X |-> Private ...</visibility>
        <store>... .Map => L |-> undefined ...</store>
        <nextLoc> L:Int => L +Int 1 </nextLoc>
 
@@ -352,7 +355,9 @@ module KOOL-UNTYPED
           <xstack> XS </xstack>
           <fstack> .List => ListItem(fstackFrame(Env, K, XS, <crntObj> Obj' </crntObj>))
           ...</fstack>
-          <crntObj> Obj' => <crntClass> Class </crntClass> <envStack> EnvStack </envStack> </crntObj>
+          <crntObj> Obj' => <crntClass> Class </crntClass> 
+          // <visibility> _VZ </visibility> 
+          <envStack> EnvStack </envStack> </crntObj>
        </control>
 
   rule <thread>...
@@ -398,6 +403,7 @@ module KOOL-UNTYPED
        <control> <xstack> XS </xstack>
          <crntObj> Obj
                    => <crntClass> Object </crntClass>
+                      <visibility> .Map </visibility>
                       <envStack> ListItem(envStackFrame(Object, .Map)) </envStack>
                       <location> L </location>
          </crntObj>
@@ -428,11 +434,20 @@ module KOOL-UNTYPED
   syntax KItem ::= "storeObj"
 
   rule <k> storeObj => . ...</k>
-       <crntObj> <crntClass> CC </crntClass> <envStack> ES </envStack> (<location> L:Int </location> => .Bag) </crntObj>
-       <store>... .Map => L |-> objectClosure(CC, ES) ...</store>
+      <crntObj> 
+        <crntClass> CC </crntClass> 
+        <visibility> _VS </visibility> 
+        <envStack> ES </envStack> 
+        (<location> L:Int </location> => .Bag) 
+      </crntObj>
+      <store>... .Map => L |-> objectClosure(CC, ES) ...</store>
 
   rule <k> this => objectClosure(CC, ES) ...</k>
-       <crntObj> <crntClass> CC </crntClass> <envStack> ES </envStack> </crntObj>
+       <crntObj> 
+          <crntClass> CC </crntClass> 
+          // <visibility> VZ => VZ </visibility> 
+          <envStack> ES </envStack> 
+        </crntObj>
 
   rule <k> X:Id => this . X ...</k> <env> Env:Map </env>
     when notBool(X in keys(Env))
